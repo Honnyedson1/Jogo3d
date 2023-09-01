@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class Andar : MonoBehaviour
 {
-    public float speed;
+    public float speed = 10f;
+    public float rotation = 180.00f;
     private Rigidbody rig;
     void Start()
     {
-        rig = GetComponent<Rigidbody>();
+        Cursor.lockState = CursorLockMode.Locked;
     }
     
     void Update()
@@ -18,10 +19,16 @@ public class Andar : MonoBehaviour
 
     void move()
     {
-        float movement = Input.GetAxis("Horizontal");
-        rig.velocity = new Vector2(movement * speed, rig.velocity.x);
+        float x = Input.GetAxis("Horizontal");
+        float y = Input.GetAxis("Vertical");
+        float mouseX = Input.GetAxis("Mouse X");
+
+        Vector3 direcao = new Vector3(x, 0, y) * speed;
         
-        float frent = Input.GetAxis("Vertical");
-        rig.velocity = new Vector2(frent * speed, rig.velocity.x);
+        
+        transform.Translate(direcao*Time.deltaTime);
+        
+        transform.Rotate(new Vector3(
+            0, mouseX * rotation * Time.deltaTime, 0));
     }
 }
