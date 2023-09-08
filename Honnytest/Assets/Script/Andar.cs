@@ -7,8 +7,10 @@ public class Andar : MonoBehaviour
     public float speed = 10f;
     public float rotation = 180.00f;
     private Rigidbody rig;
+    private Animator anim;
     void Start()
     {
+        anim = GetComponent<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
     }
     
