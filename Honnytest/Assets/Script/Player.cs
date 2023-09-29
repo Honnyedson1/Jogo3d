@@ -19,6 +19,11 @@ public class Player : MonoBehaviour
     
     void Update()
     {
+        move();
+    }
+
+    void move()
+    {
         float x = Input.GetAxisRaw("Horizontal");
         float y = Input.GetAxisRaw("Vertical");
 
@@ -37,4 +42,16 @@ public class Player : MonoBehaviour
             Controler.Move(moveDirection * speed * Time.deltaTime);
         }
     }
+
+    void GetMoouseinput()
+    {
+        if (Controler.isGrounded)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                
+            }
+        }
+    }
+    
 }
