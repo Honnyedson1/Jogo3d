@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,9 +10,20 @@ public class Player : MonoBehaviour
     public float smoothRotRime;
     public float turnsmoothvelocity;
     private Transform cam;
-    
+
+    private Vector3 moveDirection;
+    private float gravidade = 150;
+
+    private Animator anim;
+
+    public float coliderradius;
+    public List<Transform> enemylist = new List<Transform>();
+
+    private bool iswalking;
+
     void Start()
     {
+        anim = GetComponent<Animator>();
         Controler = GetComponent<CharacterController>();
         cam = Camera.main.transform;
     }
@@ -20,28 +32,56 @@ public class Player : MonoBehaviour
     void Update()
     {
         move();
+        GetMoouseinput();
     }
 
     void move()
     {
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
-
-        Vector3 direction = new Vector3(x, 0f, y);
-
-        if (direction.magnitude > 0)
+        if (Controler.isGrounded)
         {
-            float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float x = Input.GetAxisRaw("Horizontal");
+            float y = Input.GetAxisRaw("Vertical");
 
-            float smothAngle =
-                Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
-            transform.rotation = Quaternion.Euler(0f, smothAngle, 0f);
+            Vector3 direction = new Vector3(x, 0f, y);
 
-            Vector3 moveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+            if (direction.magnitude > 0)
+            {
+
+                if (!anim.GetBool("Atack"))
+                {
+                    float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+
+                    float smothAngle =
+                        Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
+                    transform.rotation = Quaternion.Euler(0f, smothAngle, 0f);
+
+                    moveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * speed;
+                
+                    anim.SetInteger("Transition", 2);
+                    iswalking = true;
+                }
+                else
+                {
+                    anim.SetBool("Walking", false);
+                    moveDirection = Vector3.zero;
+                }
+
+                
+            }
+            else if (iswalking)
+            {
+                anim.SetBool("Walking", false);
+                moveDirection = Vector3.zero;
+                anim.SetInteger("Transition", 0);
+                iswalking = false;
+            }
             
-            Controler.Move(moveDirection * speed * Time.deltaTime);
         }
+
+        moveDirection.y -= gravidade * Time.deltaTime;
+        Controler.Move(moveDirection * Time.deltaTime);
     }
+ 
 
     void GetMoouseinput()
     {
@@ -49,9 +89,54 @@ public class Player : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                
+                if (anim.GetBool("Walking"))
+                {
+                    anim.SetBool("Walking", false);
+                    anim.SetInteger("Transition", 0);
+                }
+
+                if (!anim.GetBool("Walking"))
+                {
+                    StartCoroutine("atack"); 
+                }
             }
         }
     }
-    
+
+    IEnumerator atack()
+    {
+        anim.SetBool("Atack", true);
+        anim.SetInteger("Transition", 1);
+        yield return new WaitForSeconds(0.52f);
+
+        GetEnemy();
+        
+        foreach (Transform enemys in enemylist)
+        {
+            Debug.Log(enemys.name);
+        }
+
+        yield return new WaitForSeconds(1f);
+        
+        anim.SetInteger("Transition", 0);
+        anim.SetBool("Atack", false);
+    }
+
+    void GetEnemy()
+    {
+        enemylist.Clear();
+        foreach(Collider c in Physics.OverlapSphere((transform.position + transform.forward * coliderradius),coliderradius))
+        {
+            if (c.gameObject.CompareTag("Enemy"))
+            {
+                enemylist.Add(c.transform);
+            }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position + transform.forward, coliderradius);
+    }
 }
