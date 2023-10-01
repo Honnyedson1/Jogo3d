@@ -20,6 +20,9 @@ public class Enemy : MonoBehaviour
 
     [Header("outros")] 
     public Transform player;
+
+    private bool atacking;
+    private bool walking;
     void Start()
     {
         anim = GetComponent<Animator>();
@@ -36,7 +39,29 @@ public class Enemy : MonoBehaviour
 
         if (distance <= lockradius)
         {
-            
+            agent.isStopped = false;
+
+            if (!atacking)
+            {
+                agent.SetDestination(player.position);
+                anim.SetBool("Slither Forward", true);
+                walking = true;
+            }
+            if (distance <= agent.stoppingDistance)
+            {
+                agent.isStopped = true;
+            }
+            else
+            {
+                atacking = false;
+            }
+        }
+        else
+        {
+            agent.isStopped = true;
+            anim.SetBool("Slither Forward", false);
+            atacking = false;
+            walking = false;    
         }
     }
 
