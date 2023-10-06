@@ -11,6 +11,7 @@ public class Enemy : MonoBehaviour
     public float atack;
     public float speed;
     public float lockradius;
+    public float coliderradius = 2f;    
     
     [Header("componentes")] 
     private Animator anim;
@@ -26,13 +27,10 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         anim = GetComponent<Animator>();
-        capsule = GetComponent<CapsuleCollider>();
         box = GetComponent<BoxCollider>();
         agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
     }
-
-    // Update is called once per frame
     void Update()
     {
         float distance = Vector3.Distance(player.position, transform.position);
@@ -49,7 +47,7 @@ public class Enemy : MonoBehaviour
             }
             if (distance <= agent.stoppingDistance)
             {
-                agent.isStopped = true;
+                StartCoroutine("Matack");
             }
             else
             {
@@ -62,6 +60,31 @@ public class Enemy : MonoBehaviour
             anim.SetBool("Slither Forward", false);
             atacking = false;
             walking = false;    
+        }
+    }
+    
+    IEnumerator Matack()
+    {
+        atacking = true;
+        walking = false;
+        anim.SetBool("Slither Forward", false);
+        anim.SetBool("Bite Attack", true);
+        yield return new WaitForSeconds(1f);
+
+        GetPlayer();
+        
+
+       // yield return new WaitForSeconds(4f);
+    }
+
+    void GetPlayer()
+    {
+        foreach(Collider c in Physics.OverlapSphere((transform.position + transform.forward * coliderradius),coliderradius))
+        {
+            if (c.gameObject.CompareTag("Player"))
+            {
+                Debug.Log("Aiinnnn");
+            }
         }
     }
 
