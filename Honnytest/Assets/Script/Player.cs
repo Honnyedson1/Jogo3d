@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     public float speed;
     public float smoothRotRime;
     public float turnsmoothvelocity;
+    public int dano = 15;
     private Transform cam;
 
     private Vector3 moveDirection;
@@ -113,7 +114,11 @@ public class Player : MonoBehaviour
         
         foreach (Transform enemys in enemylist)
         {
-            Debug.Log(enemys.name);
+            Enemy e = enemys.GetComponent<Enemy>();
+            if (e != null)
+            {
+                e.getHit(dano);
+            }
         }
 
         yield return new WaitForSeconds(1f);
