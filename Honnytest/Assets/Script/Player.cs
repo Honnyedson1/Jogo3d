@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class Player : MonoBehaviour
     public float turnsmoothvelocity;
     public float gravidade = 150;
     public float coliderradius;
+    public float timer = 5f;
     
     [Header("Int`s")]
     public int dano = 15;
@@ -45,6 +47,20 @@ public class Player : MonoBehaviour
         {
             move();
             GetMoouseinput();
+        }
+
+        if (life <= 0)
+        {
+            timer -= Time.deltaTime;
+            if (timer <= 0)
+            {
+                SceneManager.LoadScene(0);
+            }
+        }
+
+        if (life <= 0)
+        {
+            Destroy(gameObject.GetComponent<CharacterController>());
         }
     }
 
