@@ -10,9 +10,10 @@ public class Player : MonoBehaviour
     public float speed;
     public float smoothRotRime;
     public float turnsmoothvelocity;
-    public float gravidade = 150;
+    public float gravidade = 10;
     public float coliderradius;
     public float timer = 5f;
+    public float runspeed = 10f;
     
     [Header("Int`s")]
     public int dano = 15;
@@ -23,12 +24,14 @@ public class Player : MonoBehaviour
     public bool waitfor;
     public bool ishiting;
     public bool isdead;
+    private bool isSprinting;
     
     [Header("Component`s")]
     public CharacterController Controler;
     public Transform cam;
     public Animator anim;
     public Vector3 moveDirection;
+    private Vector3 playerVelocity;
     
     [Header("List")]
     public List<Transform> enemylist = new List<Transform>();
@@ -75,17 +78,17 @@ public class Player : MonoBehaviour
 
             if (direction.magnitude > 0)
             {
-
                 if (!anim.GetBool("Atack"))
                 {
                     float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-
-                    float smothAngle =
-                        Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
+                    float smothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
                     transform.rotation = Quaternion.Euler(0f, smothAngle, 0f);
+                    
+                    
+                    float currentSpeed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? runspeed : speed;
+                    
+                    moveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * currentSpeed;
 
-                    moveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * speed;
-                
                     anim.SetInteger("Transition", 2);
                     iswalking = true;
                 }
@@ -94,8 +97,6 @@ public class Player : MonoBehaviour
                     anim.SetBool("Walking", false);
                     moveDirection = Vector3.zero;
                 }
-
-                
             }
             else if (iswalking)
             {
@@ -104,14 +105,18 @@ public class Player : MonoBehaviour
                 anim.SetInteger("Transition", 0);
                 iswalking = false;
             }
-            
+        }
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        anim.SetBool("IsRunning", isRunning);
+        if (anim.GetBool("IsRunning"))
+        {
+            anim.SetInteger("Transition", 6);
         }
 
         moveDirection.y -= gravidade * Time.deltaTime;
         Controler.Move(moveDirection * Time.deltaTime);
     }
- 
-
+    
     void GetMoouseinput()
     {
         if (Controler.isGrounded)
