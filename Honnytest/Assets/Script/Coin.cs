@@ -6,7 +6,6 @@ using UnityEngine;
 public class Coin : MonoBehaviour
 {
     public AudioSource Source;
-    public AudioClip audio;
 
     private void Start()
     {
@@ -15,11 +14,12 @@ public class Coin : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Player")
+        Controler coinCounter = GameObject.FindObjectOfType<Controler>();
+        if (coinCounter != null)
         {
-            Source.clip = audio;
             Source.Play();
-            Destroy(gameObject);
+            coinCounter.AddCoin();
+            Destroy(gameObject, 0.4f);
         }
     }
 }

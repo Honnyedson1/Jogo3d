@@ -15,18 +15,20 @@ public class Enemy : MonoBehaviour
     public float coliderradius = 2f;    
     
     [Header("componentes")] 
-    private Animator anim;
-    private CapsuleCollider capsule;
-    private BoxCollider box;
-    private NavMeshAgent agent;
+    public Animator anim;
+    public CapsuleCollider capsule;
+    public BoxCollider box;
+    public NavMeshAgent agent;
+    public AudioSource source;
+    public AudioClip[] audios;
 
     [Header("outros")] 
     public Transform player;
-    private bool atacking;
-    private bool walking;
-    private bool waitfor;
-    private bool hitting;
-    private bool playerdead;
+    public bool atacking;
+    public bool walking;
+    public bool waitfor;
+    public bool hitting;
+    public bool playerdead;
 
     [Header("WayPoints")]
     public List<Transform> points = new List<Transform>();
@@ -34,6 +36,7 @@ public class Enemy : MonoBehaviour
     public float patchdistance;
     void Start()
     {
+        source = GetComponent<AudioSource>();
         anim = GetComponent<Animator>();
         box = GetComponent<BoxCollider>();
         agent = GetComponent<NavMeshAgent>();
@@ -55,6 +58,7 @@ public class Enemy : MonoBehaviour
                     agent.SetDestination(player.position);
                     anim.SetBool("Slither Forward", true);
                     walking = true;
+                    play(1);
                 }
 
                 if (distance <= agent.stoppingDistance)
@@ -83,6 +87,7 @@ public class Enemy : MonoBehaviour
             waitfor = true;
             atacking = true;
             walking = false;
+            play(2);
             anim.SetBool("Slither Forward", false);
             anim.SetBool("Bite Attack", true);
             yield return new WaitForSeconds(1.2f);
@@ -124,7 +129,9 @@ public class Enemy : MonoBehaviour
         }
         else
         {
+            play(0);
             anim.SetTrigger("Die");
+            Destroy(gameObject, 3f);
         }
     }
 
@@ -153,10 +160,18 @@ public class Enemy : MonoBehaviour
             walking = true;
         }
     }
-
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, lockradius);
+    }
+
+    void play(int valor)
+    {
+        if (valor >= 0 && valor < audios.Length)
+        {
+            source.clip = audios[valor];
+            source.Play();
+        }
     }
 }

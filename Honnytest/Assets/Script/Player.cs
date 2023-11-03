@@ -25,6 +25,7 @@ public class Player : MonoBehaviour
     public bool ishiting;
     public bool isdead;
     private bool isSprinting;
+    private bool isAtack;
     
     [Header("Component`s")]
     public CharacterController Controler;
@@ -32,12 +33,15 @@ public class Player : MonoBehaviour
     public Animator anim;
     public Vector3 moveDirection;
     private Vector3 playerVelocity;
+    public AudioSource Source;
+    public AudioClip[] audios;
     
     [Header("List")]
     public List<Transform> enemylist = new List<Transform>();
 
     void Start()
     {
+        Source = GetComponent<AudioSource>();
         anim = GetComponent<Animator>();
         Controler = GetComponent<CharacterController>();
         cam = Camera.main.transform;
@@ -54,6 +58,7 @@ public class Player : MonoBehaviour
 
         if (life <= 0)
         {
+            Playaudio(2);
             timer -= Time.deltaTime;
             if (timer <= 0)
             {
@@ -64,6 +69,11 @@ public class Player : MonoBehaviour
         if (life <= 0)
         {
             Destroy(gameObject.GetComponent<CharacterController>());
+        }
+
+        if (isAtack == true)
+        {
+            Playaudio(0);
         }
     }
 
@@ -83,12 +93,8 @@ public class Player : MonoBehaviour
                     float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
                     float smothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
                     transform.rotation = Quaternion.Euler(0f, smothAngle, 0f);
-                    
-                    
                     float currentSpeed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? runspeed : speed;
-                    
                     moveDirection = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * currentSpeed;
-
                     anim.SetInteger("Transition", 2);
                     iswalking = true;
                 }
@@ -142,10 +148,11 @@ public class Player : MonoBehaviour
         if (!waitfor && !ishiting)
         {
             waitfor = true;
+            isAtack = true;
             anim.SetBool("Atack", true);
             anim.SetInteger("Transition", 1);
             yield return new WaitForSeconds(0.52f);
-
+            isAtack = false;
             GetEnemy();
 
             foreach (Transform enemys in enemylist)
@@ -208,4 +215,12 @@ public class Player : MonoBehaviour
         anim.SetBool("Atack",false);
     }
 
+    void Playaudio(int valor)
+    {
+        if (valor >= 0 && valor < audios.Length)
+        {
+            Source.clip = audios[valor];
+            Source.Play();
+        }
+    }
 }
