@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -12,42 +13,44 @@ public class Player : MonoBehaviour
     public float turnsmoothvelocity;
     public float gravidade = 10;
     public float coliderradius;
-    public float timer = 5f;
+    public float timer = 7f;
     public float runspeed = 10f;
-    
+
     [Header("Int`s")]
     public int dano = 15;
     public int life;
-    
+
     [Header("Bool`s")]
     public bool iswalking;
     public bool waitfor;
     public bool ishiting;
     public bool isdead;
-    private bool isSprinting;
-    private bool isAtack;
-    
+    public bool isSprinting;
+    public bool isAtack;
+
     [Header("Component`s")]
     public CharacterController Controler;
     public Transform cam;
     public Animator anim;
     public Vector3 moveDirection;
-    private Vector3 playerVelocity;
-    public AudioSource Source;
-    public AudioClip[] audios;
+    public Vector3 playerVelocity;
+    public AudioSource footstepAudioSource;
+    public AudioSource attackAudioSource;
+    public AudioSource deathAudioSource;
+    public Slider healthBar;
     
     [Header("List")]
     public List<Transform> enemylist = new List<Transform>();
 
     void Start()
     {
-        Source = GetComponent<AudioSource>();
         anim = GetComponent<Animator>();
         Controler = GetComponent<CharacterController>();
         cam = Camera.main.transform;
+        healthBar.value = life;
+        healthBar.maxValue = life; 
     }
-    
-    
+
     void Update()
     {
         if (!isdead)
@@ -58,7 +61,6 @@ public class Player : MonoBehaviour
 
         if (life <= 0)
         {
-            Playaudio(2);
             timer -= Time.deltaTime;
             if (timer <= 0)
             {
@@ -69,11 +71,6 @@ public class Player : MonoBehaviour
         if (life <= 0)
         {
             Destroy(gameObject.GetComponent<CharacterController>());
-        }
-
-        if (isAtack == true)
-        {
-            Playaudio(0);
         }
     }
 
@@ -90,6 +87,10 @@ public class Player : MonoBehaviour
             {
                 if (!anim.GetBool("Atack"))
                 {
+                    if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.W))
+                    {
+                        footstepAudioSource.Play();
+                    }
                     float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
                     float smothAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, angle, ref turnsmoothvelocity, smoothRotRime);
                     transform.rotation = Quaternion.Euler(0f, smothAngle, 0f);
@@ -106,6 +107,7 @@ public class Player : MonoBehaviour
             }
             else if (iswalking)
             {
+                footstepAudioSource.Stop();
                 anim.SetBool("Walking", false);
                 moveDirection = Vector3.zero;
                 anim.SetInteger("Transition", 0);
@@ -122,7 +124,7 @@ public class Player : MonoBehaviour
         moveDirection.y -= gravidade * Time.deltaTime;
         Controler.Move(moveDirection * Time.deltaTime);
     }
-    
+
     void GetMoouseinput()
     {
         if (Controler.isGrounded)
@@ -137,7 +139,7 @@ public class Player : MonoBehaviour
 
                 if (!anim.GetBool("Walking"))
                 {
-                    StartCoroutine("atack"); 
+                    StartCoroutine("atack");
                 }
             }
         }
@@ -152,6 +154,7 @@ public class Player : MonoBehaviour
             anim.SetBool("Atack", true);
             anim.SetInteger("Transition", 1);
             yield return new WaitForSeconds(0.52f);
+            attackAudioSource.Play();
             isAtack = false;
             GetEnemy();
 
@@ -175,7 +178,7 @@ public class Player : MonoBehaviour
     void GetEnemy()
     {
         enemylist.Clear();
-        foreach(Collider c in Physics.OverlapSphere((transform.position + transform.forward * coliderradius),coliderradius))
+        foreach (Collider c in Physics.OverlapSphere((transform.position + transform.forward * coliderradius), coliderradius))
         {
             if (c.gameObject.CompareTag("Enemy"))
             {
@@ -189,7 +192,7 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position + transform.forward, coliderradius);
     }
-    
+
     public void getHit(int dmg)
     {
         life -= dmg;
@@ -199,11 +202,13 @@ public class Player : MonoBehaviour
             anim.SetInteger("Transition", 3);
             ishiting = true;
             StartCoroutine("recovery");
+            healthBar.value = life;
         }
         else
         {
             isdead = true;
             anim.SetTrigger("dead");
+            deathAudioSource.Play();
         }
     }
 
@@ -212,15 +217,6 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(1f);
         anim.SetInteger("Transition", 0);
         ishiting = false;
-        anim.SetBool("Atack",false);
-    }
-
-    void Playaudio(int valor)
-    {
-        if (valor >= 0 && valor < audios.Length)
-        {
-            Source.clip = audios[valor];
-            Source.Play();
-        }
+        anim.SetBool("Atack", false);
     }
 }
